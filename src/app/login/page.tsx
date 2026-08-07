@@ -6,7 +6,13 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { PawPrint, Loader2, ShieldCheck } from "lucide-react";
 import { ThemeToggle } from "@/components/storefront/theme-toggle";
 import { toast } from "sonner";
@@ -47,28 +53,44 @@ function LoginForm() {
           <PawPrint className="h-6 w-6" />
         </div>
         <CardTitle className="text-2xl">Staff Login</CardTitle>
-        <CardDescription>Sign in to the admin or moderator panel</CardDescription>
+        <CardDescription>
+          Sign in to the admin or moderator panel
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={submit} className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@pawhaven.com" required autoFocus />
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@pawhaven.com"
+              required
+              autoFocus
+            />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="password">Password</Label>
-            <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required />
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              required
+            />
           </div>
           <Button type="submit" className="w-full gap-2" disabled={loading}>
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
+            {loading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <ShieldCheck className="h-4 w-4" />
+            )}
             Sign In
           </Button>
         </form>
-        <div className="mt-6 rounded-lg border bg-muted/40 p-3 text-xs text-muted-foreground">
-          <p className="font-semibold text-foreground">Demo credentials</p>
-          <p className="mt-1">Admin: admin@pawhaven.com / Admin@1234</p>
-          <p>Moderator: moderator@pawhaven.com / Moderator@1234</p>
-        </div>
       </CardContent>
     </Card>
   );
@@ -80,7 +102,9 @@ export default function LoginPage() {
       <div className="absolute right-4 top-4">
         <ThemeToggle />
       </div>
-      <Suspense fallback={<div className="text-muted-foreground">Loading…</div>}>
+      <Suspense
+        fallback={<div className="text-muted-foreground">Loading…</div>}
+      >
         <LoginForm />
       </Suspense>
     </div>
