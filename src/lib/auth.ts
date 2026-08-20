@@ -6,12 +6,11 @@ import { db } from "@/lib/db";
 // NextAuth v4 configuration with credentials provider.
 //
 // SESSION POLICY:
-//   • 30-minute inactivity timeout (sliding window) — the JWT is refreshed
+//   • 10-minute inactivity timeout (sliding window) — the JWT is refreshed
 //     on every request (updateAge: 0), so active users stay logged in,
-//     but 30 minutes of no requests invalidates the session.
-//   • Session cookie is NOT persistent — it has no `maxAge`, so the
-//     browser deletes it when the browser closes. Reopening the browser
-//     always requires a fresh login.
+//     but 10 minutes of no requests invalidates the session.
+//   • Session cookie has NO maxAge → the browser deletes it when the
+//     browser is closed, requiring a fresh login on next visit.
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
@@ -38,11 +37,11 @@ export const authOptions: NextAuthOptions = {
   ],
   session: {
     strategy: "jwt",
-    // 30 minutes absolute max age for the JWT
-    maxAge: 30 * 60,
+    // 10 minutes absolute max age for the JWT
+    maxAge: 10 * 60,
     // Update (re-issue) the token on EVERY request → sliding window.
     // A user who is active never sees the login page; a user who is
-    // inactive for 30+ minutes is automatically logged out.
+    // inactive for 10+ minutes is automatically logged out.
     updateAge: 0,
   },
   // Session cookie is a "session cookie" (no maxAge) so the browser
@@ -55,7 +54,6 @@ export const authOptions: NextAuthOptions = {
         httpOnly: true,
         sameSite: "lax",
         path: "/",
-        // secure is true in production (HTTPS), false in dev (HTTP)
         secure: process.env.NODE_ENV === "production",
         // NOTE: intentionally NO `maxAge` → session cookie, deleted on browser close
       },
