@@ -10,8 +10,12 @@ import { db } from "@/lib/db";
 //     of no requests. Active users stay logged in via sliding refresh.
 //   • Uses NextAuth's DEFAULT cookie settings (well-tested across all
 //     browsers). Custom cookie overrides were causing login failures on
-//     Chrome/Edge/Safari — only Firefox worked because it had a cached
-//     session from before.
+//     Chrome/Edge/Safari.
+//
+// CUSTOM DOMAIN:
+//   Make sure NEXTAUTH_URL is set to your custom domain in Vercel env vars
+//   (e.g. NEXTAUTH_URL=https://www.muzzlehome.com). NextAuth v4 uses this
+//   to resolve redirect URLs so they stay on your custom domain.
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
@@ -32,7 +36,7 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           name: user.name ?? undefined,
           role: user.role,
-        } as any;
+        };
       },
     }),
   ],

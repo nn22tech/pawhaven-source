@@ -7,9 +7,6 @@ import { redirect } from "next/navigation";
  * NextAuth redirects here after successful authentication (callbackUrl).
  * We read the session SERVER-SIDE (no client timing issues) and redirect
  * to the correct panel based on the user's role.
- *
- * This avoids the mobile race condition where the session cookie isn't
- * available to client-side fetch immediately after signIn().
  */
 export const dynamic = "force-dynamic";
 

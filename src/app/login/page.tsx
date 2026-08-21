@@ -24,7 +24,6 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Show error toast if redirected back with an error
   useEffect(() => {
     if (error) {
       toast.error("Invalid credentials. Please try again.");
@@ -35,17 +34,16 @@ function LoginForm() {
     e.preventDefault();
     setLoading(true);
 
-    // Use redirect: true so NextAuth handles the redirect server-side.
-    // This ensures the session cookie is fully set before the redirect
-    // happens — no race condition on any browser.
-    // On success → redirects to /auth-callback → /admin or /moderator
-    // On error → redirects back to /login?error=...
+    // NextAuth handles the redirect server-side (redirect: true is default).
+    // callbackUrl is relative → NextAuth resolves it against NEXTAUTH_URL,
+    // so it stays on the custom domain (muzzlehome.com).
+    // /auth-callback reads the session server-side and redirects to
+    // /admin or /moderator based on role — one hop, no client fetch.
     await signIn("credentials", {
       email,
       password,
       callbackUrl: "/auth-callback",
     });
-    // Code after this doesn't execute — browser is redirected by NextAuth
   }
 
   return (
