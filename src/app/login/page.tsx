@@ -19,7 +19,7 @@ import { toast } from "sonner";
 
 function LoginForm() {
   const params = useSearchParams();
-  const callbackUrl = params.get("callbackUrl") || "/admin";
+  const callbackUrl = params.get("callbackUrl") || "/auth-callback";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -28,48 +28,22 @@ function LoginForm() {
     e.preventDefault();
     setLoading(true);
 
-    try {
-      const res = await signIn("credentials", {
-        email,
-        password,
-        redirect: false,
-      });
+    const res = await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+    });
 
-      if (res?.error) {
-        setLoading(false);
-        toast.error("Invalid credentials.");
-        return;
-      }
-
-      toast.success("Welcome back! Redirecting…");
-
-      // Fetch the session with retries — the cookie may take a moment
-      // to be available, especially on mobile/slow connections.
-      let role: string | undefined;
-      for (let i = 0; i < 5; i++) {
-        await new Promise((r) => setTimeout(r, 300));
-        try {
-          const r = await fetch("/api/auth/session", { cache: "no-store" });
-          const data = await r.json();
-          role = data?.user?.role;
-          if (role) break;
-        } catch {
-          // retry
-        }
-      }
-
-      // Hard redirect — more reliable than router.push on mobile
-      const target =
-        role === "ADMIN"
-          ? "/admin"
-          : role === "MODERATOR"
-            ? "/moderator"
-            : callbackUrl;
-      window.location.href = target;
-    } catch {
+    if (res?.error) {
       setLoading(false);
-      toast.error("Something went wrong. Please try again.");
+      toast.error("Invalid credentials.");
+      return;
     }
+
+    // Redirect to the server-side callback which reads the session and
+    // redirects to /admin or /moderator based on role. This avoids the
+    // client-side session fetch race condition on mobile.
+    window.location.href = "/auth-callback";
   }
 
   return (
