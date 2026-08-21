@@ -36,8 +36,7 @@ export async function sendEmail(params: {
   }
 
   try {
-    const fromEmail =
-      process.env.FROM_EMAIL || "PawHaven <onboarding@resend.dev>";
+    const fromEmail = process.env.FROM_EMAIL || "PawHaven <onboarding@resend.dev>";
 
     const body: any = {
       from: fromEmail,
@@ -48,6 +47,10 @@ export async function sendEmail(params: {
     if (html) body.html = html;
     if (replyTo) body.reply_to = replyTo;
 
+    // Add a timeout (8 seconds) so the serverless function doesn't hang
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
+
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -55,19 +58,25 @@ export async function sendEmail(params: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(body),
+      signal: controller.signal,
     });
+
+    clearTimeout(timeoutId);
 
     if (!res.ok) {
       const errText = await res.text();
-      console.error("Email send failed:", errText);
+      console.error("Email send failed:", res.status, errText);
       const mailto = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`;
-      return { success: false, error: errText, mailto };
+      return { success: false, error: `Resend API error ${res.status}: ${errText}`, mailto };
     }
 
     return { success: true };
   } catch (e: any) {
-    console.error("Email send error:", e);
+    console.error("Email send error:", e.message);
     const mailto = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`;
+    if (e.name === "AbortError") {
+      return { success: false, error: "Request timed out (8s)", mailto };
+    }
     return { success: false, error: e.message, mailto };
   }
 }
