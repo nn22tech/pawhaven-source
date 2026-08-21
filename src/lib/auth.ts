@@ -6,11 +6,12 @@ import { db } from "@/lib/db";
 // NextAuth v4 configuration with credentials provider.
 //
 // SESSION POLICY:
-//   • 10-minute inactivity timeout (sliding window) — the JWT is refreshed
-//     on every request (updateAge: 0), so active users stay logged in,
-//     but 10 minutes of no requests invalidates the session.
-//   • Session cookie has NO maxAge → the browser deletes it when the
-//     browser is closed, requiring a fresh login on next visit.
+//   • 10-minute inactivity timeout — the JWT expires after 10 minutes
+//     of no requests. Active users stay logged in via sliding refresh.
+//   • Uses NextAuth's DEFAULT cookie settings (well-tested across all
+//     browsers). Custom cookie overrides were causing login failures on
+//     Chrome/Edge/Safari — only Firefox worked because it had a cached
+//     session from before.
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
@@ -37,29 +38,13 @@ export const authOptions: NextAuthOptions = {
   ],
   session: {
     strategy: "jwt",
-    // 10 minutes absolute max age for the JWT
+    // 10 minutes — the session expires after 10 min of inactivity
     maxAge: 10 * 60,
-    // Update (re-issue) the token on EVERY request → sliding window.
-    // A user who is active never sees the login page; a user who is
-    // inactive for 10+ minutes is automatically logged out.
+    // Refresh the token on every request (sliding window)
     updateAge: 0,
   },
-  // Session cookie is a "session cookie" (no maxAge) so the browser
-  // deletes it on close. This means closing the browser always requires
-  // a fresh login, even if the JWT hasn't expired yet.
-  cookies: {
-    sessionToken: {
-      name: `next-auth.session-token`,
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        secure: process.env.NODE_ENV === "production",
-        // NOTE: intentionally NO `maxAge` → session cookie, deleted on browser close
-      },
-    },
-  },
-  secret: process.env.NEXTAUTH_SECRET || "pawhaven-dev-secret-change-in-production",
+  secret:
+    process.env.NEXTAUTH_SECRET || "pawhaven-dev-secret-change-in-production",
   pages: {
     signIn: "/login",
   },

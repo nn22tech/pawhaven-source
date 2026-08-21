@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, Suspense, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -19,31 +19,33 @@ import { toast } from "sonner";
 
 function LoginForm() {
   const params = useSearchParams();
-  const callbackUrl = params.get("callbackUrl") || "/auth-callback";
+  const error = params.get("error");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Show error toast if redirected back with an error
+  useEffect(() => {
+    if (error) {
+      toast.error("Invalid credentials. Please try again.");
+    }
+  }, [error]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
 
-    const res = await signIn("credentials", {
+    // Use redirect: true so NextAuth handles the redirect server-side.
+    // This ensures the session cookie is fully set before the redirect
+    // happens — no race condition on any browser.
+    // On success → redirects to /auth-callback → /admin or /moderator
+    // On error → redirects back to /login?error=...
+    await signIn("credentials", {
       email,
       password,
-      redirect: false,
+      callbackUrl: "/auth-callback",
     });
-
-    if (res?.error) {
-      setLoading(false);
-      toast.error("Invalid credentials.");
-      return;
-    }
-
-    // Redirect to the server-side callback which reads the session and
-    // redirects to /admin or /moderator based on role. This avoids the
-    // client-side session fetch race condition on mobile.
-    window.location.href = "/auth-callback";
+    // Code after this doesn't execute — browser is redirected by NextAuth
   }
 
   return (

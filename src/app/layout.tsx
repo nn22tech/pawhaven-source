@@ -35,15 +35,13 @@ const lora = Lora({
 });
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
 
-// Force dynamic metadata generation so social media crawlers always get
-// the CURRENT site name/logo (not a cached build-time version).
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+// Regenerate pages every 60 seconds (ISR) — fast for users, fresh enough
+// for social media crawlers. Do NOT use force-dynamic here — it makes
+// every single page render server-side on every request (super slow).
+export const revalidate = 60;
 
 export async function generateMetadata(): Promise<Metadata> {
   const s = await getSiteSettings();
-
-  // Use the site's logo or hero image as the social preview image
   const ogImage = s.heroImageUrl || s.logoUrl || undefined;
   const title = `${s.siteName} — ${s.siteTagline}`;
 
