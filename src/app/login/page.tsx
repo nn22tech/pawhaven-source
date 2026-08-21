@@ -92,7 +92,7 @@ function LoginForm() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@pawhaven.com"
+              placeholder="you@example.com"
               required
               autoFocus
             />
@@ -117,11 +117,6 @@ function LoginForm() {
             Sign In
           </Button>
         </form>
-        <div className="mt-6 rounded-lg border bg-muted/40 p-3 text-xs text-muted-foreground">
-          <p className="font-semibold text-foreground">Demo credentials</p>
-          <p className="mt-1">Admin: admin@pawhaven.com / Admin@1234</p>
-          <p>Moderator: moderator@pawhaven.com / Moderator@1234</p>
-        </div>
       </CardContent>
     </Card>
   );
@@ -129,7 +124,7 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-muted/30 px-4">
+    <div className="flex min-h-[100dvh] w-full flex-col items-center justify-center overflow-y-auto bg-muted/30 px-4 py-8">
       <div className="absolute right-4 top-4">
         <ThemeToggle />
       </div>
