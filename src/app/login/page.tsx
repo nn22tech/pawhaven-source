@@ -2,7 +2,7 @@
 
 import { useState, Suspense } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,9 +18,8 @@ import { ThemeToggle } from "@/components/storefront/theme-toggle";
 import { toast } from "sonner";
 
 function LoginForm() {
-  const router = useRouter();
   const params = useSearchParams();
-  const callback = params.get("callbackUrl") || "/admin";
+  const callbackUrl = params.get("callbackUrl") || "/admin";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -28,22 +27,49 @@ function LoginForm() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    const res = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    });
-    setLoading(false);
-    if (res?.error) {
-      toast.error("Invalid credentials.");
-      return;
+
+    try {
+      const res = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+
+      if (res?.error) {
+        setLoading(false);
+        toast.error("Invalid credentials.");
+        return;
+      }
+
+      toast.success("Welcome back! Redirecting…");
+
+      // Fetch the session with retries — the cookie may take a moment
+      // to be available, especially on mobile/slow connections.
+      let role: string | undefined;
+      for (let i = 0; i < 5; i++) {
+        await new Promise((r) => setTimeout(r, 300));
+        try {
+          const r = await fetch("/api/auth/session", { cache: "no-store" });
+          const data = await r.json();
+          role = data?.user?.role;
+          if (role) break;
+        } catch {
+          // retry
+        }
+      }
+
+      // Hard redirect — more reliable than router.push on mobile
+      const target =
+        role === "ADMIN"
+          ? "/admin"
+          : role === "MODERATOR"
+            ? "/moderator"
+            : callbackUrl;
+      window.location.href = target;
+    } catch {
+      setLoading(false);
+      toast.error("Something went wrong. Please try again.");
     }
-    toast.success("Welcome back!");
-    // Fetch session to determine role-based redirect
-    const r = await fetch("/api/auth/session").then((x) => x.json());
-    const role = r?.user?.role;
-    router.push(role === "ADMIN" ? "/admin" : "/moderator");
-    router.refresh();
   }
 
   return (
@@ -91,6 +117,11 @@ function LoginForm() {
             Sign In
           </Button>
         </form>
+        <div className="mt-6 rounded-lg border bg-muted/40 p-3 text-xs text-muted-foreground">
+          <p className="font-semibold text-foreground">Demo credentials</p>
+          <p className="mt-1">Admin: admin@pawhaven.com / Admin@1234</p>
+          <p>Moderator: moderator@pawhaven.com / Moderator@1234</p>
+        </div>
       </CardContent>
     </Card>
   );
