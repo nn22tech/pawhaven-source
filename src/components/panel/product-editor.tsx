@@ -86,7 +86,7 @@ export function ProductEditor({ open, onOpenChange, categories, product, onSaved
         breed: product.breed ?? "", age: product.age ?? "", color: product.color ?? "",
         gender: product.gender ?? "", vaccinated: product.vaccinated ?? false,
         neutered: product.neutered ?? false, brand: product.brand ?? "",
-        stock: product.stock, categoryId: product.categoryId,
+        stock: product.stock, categoryId: product.categoryId ?? "",
         featured: product.featured, status: product.status,
       });
       setMedia(product.media.map((m) => ({ id: m.id, url: m.url, type: m.type as "IMAGE" | "VIDEO" })));

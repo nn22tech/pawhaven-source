@@ -1,6 +1,5 @@
 // Prisma schema for PawHaven Pet Adoption & Supplies
 // Uses PostgreSQL (Neon) for both local dev and production.
-// To use SQLite locally instead, run: bun run db:use-sqlite
 
 generator client {
   provider = "prisma-client-js"
@@ -55,8 +54,8 @@ model Product {
   brand          String?
   // Common
   stock          Int            @default(1)
-  categoryId     String
-  category       Category       @relation(fields: [categoryId], references: [id])
+  categoryId     String?
+  category       Category?      @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   media          ProductMedia[]
   featured       Boolean        @default(false)
   status         String         @default("ACTIVE") // ACTIVE | SOLD | ADOPTED | INACTIVE
@@ -109,39 +108,31 @@ model AdoptionApplication {
 }
 
 // ─── Site Settings (singleton) ─────────────────────────────────
-// Controls everything customizable: name, logo, favicon, colors,
-// fonts, hero, footer, social links, layout.
 model SiteSettings {
   id              String   @id @default("singleton")
   siteName        String   @default("PawHaven")
   siteTagline     String   @default("Where Every Pet Finds a Home")
   logoUrl         String?
   faviconUrl      String?
-  // Theme customization
-  primaryColor    String   @default("") // empty = default theme
+  primaryColor    String   @default("")
   accentColor     String   @default("")
   fontHeading     String   @default("geist")
   fontBody        String   @default("geist")
   borderRadius    String   @default("0.625rem")
-  // Hero section
   heroTitle       String   @default("Find Your New Best Friend")
   heroSubtitle    String   @default("Adopt a loving pet or shop premium supplies — all in one place.")
   heroImageUrl    String?
   heroCtaText     String   @default("Browse Pets")
-  // Footer
   footerText      String   @default("© PawHaven. All rights reserved.")
   contactEmail    String   @default("orders@pawhaven.example")
   contactPhone    String?
   address         String?
-  // Social
   socialFacebook  String?
   socialTwitter   String?
   socialInstagram String?
   socialYoutube   String?
-  // Feature toggles
   showFeatured    Boolean  @default(true)
   showCategories  Boolean  @default(true)
-  // Order email recipient
   orderEmail      String   @default("orders@pawhaven.example")
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt

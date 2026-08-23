@@ -7,10 +7,11 @@ import { revalidatePath } from "next/cache";
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const user = await requireStaff();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!user)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { id } = await params;
   const body = await req.json();
   try {
@@ -28,26 +29,34 @@ export async function PUT(
     revalidatePath("/", "layout");
     return NextResponse.json({ category });
   } catch (e: any) {
-    return NextResponse.json({ error: e.message || "Update failed" }, { status: 500 });
+    return NextResponse.json(
+      { error: e.message || "Update failed" },
+      { status: 500 },
+    );
   }
 }
 
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const user = await requireStaff();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!user)
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { id } = await params;
   try {
-    // Null out product references first, then delete category
-    await db.product.updateMany({ where: { categoryId: id }, data: { categoryId: "" } }).catch(() => {});
+    // Products reference this category. With onDelete: SetNull in the
+    // schema, deleting the category sets productId to null automatically.
+    // No need to manually update products.
     await db.category.delete({ where: { id } });
     bustCategoriesCache();
     bustProductsCache();
     revalidatePath("/", "layout");
     return NextResponse.json({ ok: true });
   } catch (e: any) {
-    return NextResponse.json({ error: e.message || "Delete failed" }, { status: 500 });
+    return NextResponse.json(
+      { error: e.message || "Delete failed" },
+      { status: 500 },
+    );
   }
 }
