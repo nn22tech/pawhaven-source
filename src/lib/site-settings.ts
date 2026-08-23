@@ -1,9 +1,12 @@
 import { db } from "@/lib/db";
 import type { SiteSettings } from "@prisma/client";
 
-/** Cached singleton fetch of site-wide settings used across the storefront. */
+/** Cached singleton fetch of site-wide settings used across the storefront.
+ *  TTL is 5 minutes — site settings rarely change, so a long cache
+ *  drastically reduces Neon compute usage. Cache is busted when an admin
+ *  saves new settings (see bustSettingsCache). */
 let cache: { data: SiteSettings | null; ts: number } = { data: null, ts: 0 };
-const TTL = 10_000; // 10s in-memory cache
+const TTL = 5 * 60 * 1000; // 5 minutes in-memory cache
 
 /**
  * Safe default settings used when the database is unreachable

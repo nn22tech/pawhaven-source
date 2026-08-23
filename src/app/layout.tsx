@@ -1,12 +1,5 @@
 import type { Metadata } from "next";
-import {
-  Geist,
-  Geist_Mono,
-  Poppins,
-  Playfair_Display,
-  Lora,
-  Inter,
-} from "next/font/google";
+import { Geist, Geist_Mono, Poppins, Playfair_Display, Lora, Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Providers } from "@/lib/providers";
@@ -14,34 +7,21 @@ import { getSiteSettings } from "@/lib/site-settings";
 import { SiteStyleInjector } from "@/components/site-style";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-const poppins = Poppins({
-  variable: "--font-poppins",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
-const playfair = Playfair_Display({
-  variable: "--font-playfair",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
-const lora = Lora({
-  variable: "--font-lora",
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-});
+const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
+const poppins = Poppins({ variable: "--font-poppins", subsets: ["latin"], weight: ["400", "500", "600", "700"] });
+const playfair = Playfair_Display({ variable: "--font-playfair", subsets: ["latin"], weight: ["400", "500", "600", "700"] });
+const lora = Lora({ variable: "--font-lora", subsets: ["latin"], weight: ["400", "500", "600"] });
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
 
-// Regenerate pages every 60 seconds (ISR) — fast for users, fresh enough
-// for social media crawlers. Do NOT use force-dynamic here — it makes
-// every single page render server-side on every request (super slow).
-export const revalidate = 60;
+// ISR: regenerate pages every 5 minutes — drastically reduces Neon
+// compute usage on the free tier. Combined with in-memory caches, a
+// page view almost never hits the database.
+export const revalidate = 300;
 
 export async function generateMetadata(): Promise<Metadata> {
   const s = await getSiteSettings();
+
+  // Use the site's logo or hero image as the social preview image
   const ogImage = s.heroImageUrl || s.logoUrl || undefined;
   const title = `${s.siteName} — ${s.siteTagline}`;
 
@@ -59,9 +39,7 @@ export async function generateMetadata(): Promise<Metadata> {
       description: s.siteTagline,
       siteName: s.siteName,
       type: "website",
-      images: ogImage
-        ? [{ url: ogImage, width: 1200, height: 630, alt: s.siteName }]
-        : undefined,
+      images: ogImage ? [{ url: ogImage, width: 1200, height: 630, alt: s.siteName }] : undefined,
     },
     twitter: {
       card: "summary_large_image",

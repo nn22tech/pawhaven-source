@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireStaff } from "@/lib/session";
 import { slugify } from "@/lib/format";
+import { bustProductsCache } from "@/lib/cache";
 
 /** GET /api/products/[id] — public single product */
 export async function GET(
@@ -66,6 +67,7 @@ export async function PUT(
     },
     include: { media: { orderBy: { order: "asc" } }, category: true },
   });
+  bustProductsCache();
   return NextResponse.json({ product });
 }
 
@@ -78,5 +80,6 @@ export async function DELETE(
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { id } = await params;
   await db.product.delete({ where: { id } });
+  bustProductsCache();
   return NextResponse.json({ ok: true });
 }

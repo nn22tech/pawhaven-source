@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireStaff } from "@/lib/session";
 import { slugify } from "@/lib/format";
+import { bustCategoriesCache } from "@/lib/cache";
 
 export async function PUT(
   req: NextRequest,
@@ -21,6 +22,7 @@ export async function PUT(
       order: body.order !== undefined ? Number(body.order) : undefined,
     },
   });
+  bustCategoriesCache();
   return NextResponse.json({ category });
 }
 
@@ -32,5 +34,6 @@ export async function DELETE(
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { id } = await params;
   await db.category.delete({ where: { id } });
+  bustCategoriesCache();
   return NextResponse.json({ ok: true });
 }

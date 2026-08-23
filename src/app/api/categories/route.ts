@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireStaff } from "@/lib/session";
 import { slugify } from "@/lib/format";
+import { bustCategoriesCache } from "@/lib/cache";
 
 /** GET — public list of categories */
 export async function GET() {
@@ -27,5 +28,6 @@ export async function POST(req: NextRequest) {
       order: Number(body.order) || 0,
     },
   });
+  bustCategoriesCache();
   return NextResponse.json({ category });
 }

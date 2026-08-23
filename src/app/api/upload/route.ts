@@ -6,12 +6,13 @@ import crypto from "crypto";
  * POST /api/upload — staff only.
  * Accepts multipart/form-data with field `files` (one or many).
  *
- * Storage strategy (auto-detected):
- *  - On Vercel/serverless (read-only FS): files are returned as base64 data
- *    URLs so they work immediately without external storage setup. For
- *    production scale, swap this for Vercel Blob / S3.
- *  - Locally (writable FS): files are saved to /public/uploads and the
- *    public URL is returned.
+ * STORAGE STRATEGY (optimized for Neon free tier):
+ *  - Production (Vercel): Uses Vercel Blob — files stored in Blob storage,
+ *    only the URL is saved to Neon. Zero database bloat.
+ *  - Local dev (no Blob token): Saves to /public/uploads.
+ *
+ * Previous base64 fallback removed — it bloated the Neon database and
+ * consumed all free-tier compute hours.
  */
 export async function POST(req: NextRequest) {
   const user = await requireStaff();
@@ -21,13 +22,13 @@ export async function POST(req: NextRequest) {
   const files = form.getAll("files").filter((f): f is File => f instanceof File);
   if (!files.length) return NextResponse.json({ error: "No files" }, { status: 400 });
 
-  const MAX = 5 * 1024 * 1024; // 5MB per file (keeps data URLs reasonable)
+  const MAX = 10 * 1024 * 1024; // 10MB per file
   const results: { url: string; type: "IMAGE" | "VIDEO"; name: string }[] = [];
 
   for (const file of files) {
     if (file.size > MAX) {
       return NextResponse.json(
-        { error: `${file.name} exceeds 5MB limit` },
+        { error: `${file.name} exceeds 10MB limit` },
         { status: 413 }
       );
     }
@@ -42,10 +43,25 @@ export async function POST(req: NextRequest) {
 
     const buffer = Buffer.from(await file.arrayBuffer());
 
-    // Try local filesystem first (works in dev + any writable FS).
-    // On Vercel serverless, /public is read-only at runtime, so this will
-    // throw and we fall back to a data URL.
-    let url: string;
+    // Try Vercel Blob first (production)
+    if (process.env.BLOB_READ_WRITE_TOKEN) {
+      try {
+        const { put } = await import("@vercel/blob");
+        const ext = file.name.split(".").pop()?.toLowerCase() || (isVideo ? "mp4" : "jpg");
+        const blobName = `uploads/${crypto.randomBytes(12).toString("hex")}.${ext}`;
+        const blob = await put(blobName, file, {
+          access: "public",
+          contentType: file.type,
+          addRandomSuffix: false,
+        });
+        results.push({ url: blob.url, type: isVideo ? "VIDEO" : "IMAGE", name: file.name });
+        continue;
+      } catch (e) {
+        console.error("Blob upload failed, falling back to local:", e);
+      }
+    }
+
+    // Fallback: local filesystem (dev only)
     try {
       const { writeFile, mkdir } = await import("fs/promises");
       const path = await import("path");
@@ -54,14 +70,13 @@ export async function POST(req: NextRequest) {
       const ext = file.name.split(".").pop()?.toLowerCase() || (isVideo ? "mp4" : "jpg");
       const name = `${crypto.randomBytes(12).toString("hex")}.${ext}`;
       await writeFile(path.join(uploadDir, name), buffer);
-      url = `/uploads/${name}`;
+      results.push({ url: `/uploads/${name}`, type: isVideo ? "VIDEO" : "IMAGE", name: file.name });
     } catch {
-      // Read-only filesystem (Vercel) — use a data URL as a portable fallback.
-      // For production, replace with Vercel Blob upload.
-      url = `data:${file.type};base64,${buffer.toString("base64")}`;
+      return NextResponse.json(
+        { error: "Upload failed. Set BLOB_READ_WRITE_TOKEN in Vercel for production uploads." },
+        { status: 500 }
+      );
     }
-
-    results.push({ url, type: isVideo ? "VIDEO" : "IMAGE", name: file.name });
   }
 
   return NextResponse.json({ files: results });

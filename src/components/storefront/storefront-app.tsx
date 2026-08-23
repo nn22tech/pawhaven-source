@@ -10,24 +10,16 @@ import { ProductCard } from "./product-card";
 import { ProductDetailDialog } from "./product-detail-dialog";
 import { AdoptionDialog } from "./adoption-dialog";
 import { CartDrawer } from "./cart-drawer";
-import { ContactForm } from "./contact-form";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/lib/cart-store";
 import type { SiteSettings, Category } from "@prisma/client";
 import type { ProductWithMedia } from "@/lib/types";
-import type { ComponentType } from "react";
 
 interface Props {
   settings: SiteSettings;
   categories: Category[];
   products: ProductWithMedia[];
 }
-
-const TypedAdoptionDialog = AdoptionDialog as unknown as ComponentType<{
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  prefill: ProductWithMedia | null;
-}>;
 
 export function StorefrontApp({ settings, categories, products }: Props) {
   const [cartOpen, setCartOpen] = useState(false);
@@ -54,7 +46,7 @@ export function StorefrontApp({ settings, categories, products }: Props) {
           p.name.toLowerCase().includes(q) ||
           p.description.toLowerCase().includes(q) ||
           (p.breed || "").toLowerCase().includes(q) ||
-          (p.brand || "").toLowerCase().includes(q),
+          (p.brand || "").toLowerCase().includes(q)
       );
     }
     return list;
@@ -62,7 +54,7 @@ export function StorefrontApp({ settings, categories, products }: Props) {
 
   const featured = useMemo(
     () => products.filter((p) => p.featured).slice(0, 4),
-    [products],
+    [products]
   );
 
   function scrollToGrid() {
@@ -100,20 +92,11 @@ export function StorefrontApp({ settings, categories, products }: Props) {
           <section className="container mx-auto px-4 py-12">
             <div className="mb-6 flex items-center gap-2">
               <Heart className="h-5 w-5 text-primary" />
-              <h2
-                className="text-2xl font-bold"
-                style={{ fontFamily: "var(--font-heading)" }}
-              >
-                Featured
-              </h2>
+              <h2 className="text-2xl font-bold" style={{ fontFamily: "var(--font-heading)" }}>Featured</h2>
             </div>
             <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
               {featured.map((p) => (
-                <ProductCard
-                  key={p.id}
-                  product={p}
-                  onOpen={() => openProduct(p)}
-                />
+                <ProductCard key={p.id} product={p} onOpen={() => openProduct(p)} />
               ))}
             </div>
           </section>
@@ -122,26 +105,10 @@ export function StorefrontApp({ settings, categories, products }: Props) {
         {/* Category pills */}
         <div ref={gridRef} className="container mx-auto scroll-mt-20 px-4 py-4">
           <div className="mb-6 flex flex-wrap items-center gap-2">
-            <h2
-              className="mr-2 text-2xl font-bold"
-              style={{ fontFamily: "var(--font-heading)" }}
-            >
-              Shop All
-            </h2>
-            <Button
-              size="sm"
-              variant={!activeCategory ? "default" : "outline"}
-              onClick={() => setActiveCategory(null)}
-            >
-              All
-            </Button>
+            <h2 className="mr-2 text-2xl font-bold" style={{ fontFamily: "var(--font-heading)" }}>Shop All</h2>
+            <Button size="sm" variant={!activeCategory ? "default" : "outline"} onClick={() => setActiveCategory(null)}>All</Button>
             {categories.map((c) => (
-              <Button
-                key={c.id}
-                size="sm"
-                variant={activeCategory === c.slug ? "default" : "outline"}
-                onClick={() => setActiveCategory(c.slug)}
-              >
+              <Button key={c.id} size="sm" variant={activeCategory === c.slug ? "default" : "outline"} onClick={() => setActiveCategory(c.slug)}>
                 {c.name}
               </Button>
             ))}
@@ -156,16 +123,9 @@ export function StorefrontApp({ settings, categories, products }: Props) {
               <p>No products found. Try a different search or category.</p>
             </div>
           ) : (
-            <motion.div
-              layout
-              className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4"
-            >
+            <motion.div layout className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
               {filtered.map((p) => (
-                <ProductCard
-                  key={p.id}
-                  product={p}
-                  onOpen={() => openProduct(p)}
-                />
+                <ProductCard key={p.id} product={p} onOpen={() => openProduct(p)} />
               ))}
             </motion.div>
           )}
@@ -177,31 +137,16 @@ export function StorefrontApp({ settings, categories, products }: Props) {
             <span className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground">
               <PawPrint className="h-7 w-7" />
             </span>
-            <h2
-              className="text-3xl font-bold"
-              style={{ fontFamily: "var(--font-heading)" }}
-            >
+            <h2 className="text-3xl font-bold" style={{ fontFamily: "var(--font-heading)" }}>
               Looking for a specific pet?
             </h2>
             <p className="max-w-xl text-muted-foreground">
-              Tell us the type, color, age and your experience — we'll help
-              match you with your perfect companion.
+              Tell us the type, color, age and your experience — we'll help match you with your perfect companion.
             </p>
-            <Button
-              size="lg"
-              className="gap-2"
-              onClick={() => {
-                setAdoptTarget(null);
-                setAdoptOpen(true);
-              }}
-            >
+            <Button size="lg" className="gap-2" onClick={() => { setAdoptTarget(null); setAdoptOpen(true); }}>
               <Heart className="h-4 w-4" /> Submit an Adoption Request
             </Button>
           </div>
-        </section>
-        {/* Contact / Info Request */}
-        <section className="container mx-auto px-4 py-14">
-          <ContactForm settings={settings} />
         </section>
       </main>
 
@@ -213,11 +158,7 @@ export function StorefrontApp({ settings, categories, products }: Props) {
         onOpenChange={setDetailOpen}
         onAdopt={startAdoption}
       />
-      <TypedAdoptionDialog
-        open={adoptOpen}
-        onOpenChange={setAdoptOpen}
-        prefill={adoptTarget}
-      />
+      <AdoptionDialog open={adoptOpen} onOpenChange={setAdoptOpen} prefill={adoptTarget} />
       <CartDrawer open={cartOpen} onOpenChange={setCartOpen} />
     </div>
   );
