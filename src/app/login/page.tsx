@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, Suspense, useEffect } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,32 +12,34 @@ import { ThemeToggle } from "@/components/storefront/theme-toggle";
 import { toast } from "sonner";
 
 function LoginForm() {
-  const router = useRouter();
   const params = useSearchParams();
-  const callback = params.get("callbackUrl") || "/admin";
+  const error = params.get("error");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Show error toast if redirected back with an error
+  useEffect(() => {
+    if (error) {
+      toast.error("Invalid credentials. Please try again.");
+    }
+  }, [error]);
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    const res = await signIn("credentials", {
+
+    // NextAuth handles the redirect server-side (redirect: true is default).
+    // callbackUrl is relative → NextAuth resolves it against NEXTAUTH_URL,
+    // so it stays on the custom domain.
+    // /auth-callback reads the session server-side and redirects to
+    // /admin or /moderator based on role — one hop, no client fetch.
+    await signIn("credentials", {
       email,
       password,
-      redirect: false,
+      callbackUrl: "/auth-callback",
     });
-    setLoading(false);
-    if (res?.error) {
-      toast.error("Invalid credentials.");
-      return;
-    }
-    toast.success("Welcome back!");
-    // Fetch session to determine role-based redirect
-    const r = await fetch("/api/auth/session").then((x) => x.json());
-    const role = r?.user?.role;
-    router.push(role === "ADMIN" ? "/admin" : "/moderator");
-    router.refresh();
+    // Code after this doesn't execute — browser is redirected by NextAuth
   }
 
   return (
@@ -53,22 +55,32 @@ function LoginForm() {
         <form onSubmit={submit} className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@pawhaven.com" required autoFocus />
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              required
+              autoFocus
+            />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="password">Password</Label>
-            <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required />
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              required
+            />
           </div>
           <Button type="submit" className="w-full gap-2" disabled={loading}>
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4" />}
             Sign In
           </Button>
         </form>
-        <div className="mt-6 rounded-lg border bg-muted/40 p-3 text-xs text-muted-foreground">
-          <p className="font-semibold text-foreground">Demo credentials</p>
-          <p className="mt-1">Admin: admin@pawhaven.com / Admin@1234</p>
-          <p>Moderator: moderator@pawhaven.com / Moderator@1234</p>
-        </div>
       </CardContent>
     </Card>
   );
@@ -76,7 +88,7 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-muted/30 px-4">
+    <div className="flex min-h-[100dvh] w-full flex-col items-center justify-center overflow-y-auto bg-muted/30 px-4 py-8">
       <div className="absolute right-4 top-4">
         <ThemeToggle />
       </div>

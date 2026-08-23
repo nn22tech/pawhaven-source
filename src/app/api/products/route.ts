@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireStaff } from "@/lib/session";
 import { slugify } from "@/lib/format";
-import { bustProductsCache } from "@/lib/cache";
+import { bustProductsCache, bustCategoriesCache } from "@/lib/cache";
+import { revalidatePath } from "next/cache";
 
 /** GET /api/products — public list with filters: category, type, search, featured */
 export async function GET(req: NextRequest) {
@@ -73,5 +74,7 @@ export async function POST(req: NextRequest) {
     include: { media: true, category: true },
   });
   bustProductsCache();
+  bustCategoriesCache(); // category product counts changed
+  revalidatePath("/", "layout"); // instantly refresh storefront
   return NextResponse.json({ product });
 }

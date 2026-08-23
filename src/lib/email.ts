@@ -7,7 +7,6 @@
  *   3. Set environment variables:
  *        RESEND_API_KEY=re_xxxxx
  *        FROM_EMAIL=Your Store <noreply@yourdomain.com>
- *      (or use the default onboarding@resend.dev for testing)
  *
  * If RESEND_API_KEY is not set, sendEmail returns { success: false }
  * and callers should fall back to a mailto: link.

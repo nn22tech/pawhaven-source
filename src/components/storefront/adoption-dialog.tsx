@@ -52,7 +52,15 @@ export function AdoptionDialog({ open, onOpenChange, prefill }: Props) {
         body: JSON.stringify({ ...form, productId: prefill?.id || null }),
       });
       if (!res.ok) throw new Error("Submission failed");
-      toast.success("Application submitted! Our team will reach out soon.");
+      const data = await res.json();
+      if (data.emailSent) {
+        toast.success("Application submitted! We've been notified and will reach out soon.");
+      } else if (data.emailFallback) {
+        window.location.href = data.emailFallback;
+        toast.info("Opening your email app to complete the submission…");
+      } else {
+        toast.success("Application submitted! Our team will reach out soon.");
+      }
       onOpenChange(false);
       setForm({ fullName: "", email: "", phone: "", location: "", petType: "", petColor: "", petAge: "", amount: "", experience: "", message: "" });
     } catch {

@@ -41,10 +41,16 @@ export function CartDrawer({ open, onOpenChange }: { open: boolean; onOpenChange
         body: JSON.stringify({ customer: cust, items }),
       });
       if (!res.ok) throw new Error("Checkout failed");
-      const { mailto } = await res.json();
-      // Open the user's email client with the prewritten order message
-      window.location.href = mailto;
-      toast.success("Order placed! Your email app should now open with the order details.");
+      const data = await res.json();
+
+      if (data.emailSent) {
+        toast.success("Order placed! We've received your order and will contact you shortly.");
+      } else if (data.mailto) {
+        window.location.href = data.mailto;
+        toast.success("Order placed! Your email app should now open with the order details.");
+      } else {
+        toast.success("Order placed!");
+      }
       clear();
       setStep("cart");
       onOpenChange(false);

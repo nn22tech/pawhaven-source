@@ -10,6 +10,7 @@ import { ProductCard } from "./product-card";
 import { ProductDetailDialog } from "./product-detail-dialog";
 import { AdoptionDialog } from "./adoption-dialog";
 import { CartDrawer } from "./cart-drawer";
+import { ContactForm } from "./contact-form";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/lib/cart-store";
 import type { SiteSettings, Category } from "@prisma/client";
@@ -147,6 +148,11 @@ export function StorefrontApp({ settings, categories, products }: Props) {
               <Heart className="h-4 w-4" /> Submit an Adoption Request
             </Button>
           </div>
+        </section>
+
+        {/* Contact / Info Request */}
+        <section className="container mx-auto px-4 py-14">
+          <ContactForm settings={settings} />
         </section>
       </main>
 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireStaff, requireAdmin } from "@/lib/session";
 import { getSiteSettings, bustSettingsCache } from "@/lib/site-settings";
+import { revalidatePath } from "next/cache";
 
 /** GET — staff can read settings (needed to render panels). */
 export async function GET() {
@@ -27,10 +28,18 @@ export async function PUT(req: NextRequest) {
   for (const k of allowed) {
     if (body[k] !== undefined) data[k] = body[k];
   }
-  const settings = await db.siteSettings.update({
-    where: { id: "singleton" },
-    data,
-  });
-  bustSettingsCache();
-  return NextResponse.json({ settings });
+  try {
+    await db.siteSettings.update({
+      where: { id: "singleton" },
+      data,
+    });
+    bustSettingsCache();
+    // Instantly refresh the storefront so admin edits (footer, images,
+    // colors, fonts) appear immediately instead of waiting for ISR.
+    revalidatePath("/", "layout");
+    return NextResponse.json({ ok: true });
+  } catch (e: any) {
+    console.error("Settings update failed:", e);
+    return NextResponse.json({ error: e.message || "Update failed" }, { status: 500 });
+  }
 }

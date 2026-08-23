@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { requireStaff } from "@/lib/session";
 import { slugify } from "@/lib/format";
 import { bustCategoriesCache } from "@/lib/cache";
+import { revalidatePath } from "next/cache";
 
 /** GET — public list of categories */
 export async function GET() {
@@ -29,5 +30,6 @@ export async function POST(req: NextRequest) {
     },
   });
   bustCategoriesCache();
+  revalidatePath("/", "layout"); // instantly refresh storefront nav
   return NextResponse.json({ category });
 }

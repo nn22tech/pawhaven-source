@@ -10,10 +10,7 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
 
   if (!body.name || !body.email || !body.message) {
-    return NextResponse.json(
-      { error: "Name, email and message are required" },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: "Name, email and message are required" }, { status: 400 });
   }
 
   const settings = await getSiteSettings();
@@ -55,10 +52,7 @@ export async function POST(req: NextRequest) {
   });
 
   if (result.success) {
-    return NextResponse.json({
-      success: true,
-      message: "Message sent successfully",
-    });
+    return NextResponse.json({ success: true, message: "Message sent successfully" });
   }
 
   // Fallback: return a mailto link
