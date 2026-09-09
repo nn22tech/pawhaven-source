@@ -5,6 +5,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Providers } from "@/lib/providers";
 import { getSiteSettings } from "@/lib/site-settings";
 import { SiteStyleInjector } from "@/components/site-style";
+import { Analytics } from "@vercel/analytics/next";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
@@ -66,6 +67,7 @@ export default async function RootLayout({
           {children}
           <Sonner />
         </Providers>
+        <Analytics />
       </body>
     </html>
   );
